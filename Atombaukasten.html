@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Atom-Baukasten - Erweitert</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #333;
+            overflow-x: hidden;
+            touch-action: pan-y;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 280px 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: 300px 1fr 320px;
+            }
+        }
+
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        @media (min-width: 768px) {
+            .controls {
+                max-height: 85vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .controls h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.6em;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #555;
+            font-size: 1.1em;
+        }
+
+        .particle-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .particle-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+            touch-action: manipulation;
+        }
+
+        .particle-btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-minus {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-plus {
+            background: #51cf66;
+            color: white;
+        }
+
+        .particle-count {
+            flex: 1;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .proton-label { color: #e74c3c; }
+        .neutron-label { color: #95a5a6; }
+        .electron-label { color: #3498db; }
+
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 15px;
+            border: 3px solid #667eea;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1.05em;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .toggle-btn:active {
+            transform: scale(0.98);
+        }
+
+        .toggle-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .reset-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.05em;
+            cursor: pointer;
+            transition: all 0.3s;
+            touch-action: manipulation;
+        }
+
+        .reset-btn:active {
+            transform: scale(0.98);
+            background: #ee5a52;
+        }
+
+        .canvas-container {
+            position: relative;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px;
+            touch-action: none;
+        }
+
+        @media (min-width: 768px) {
+            .canvas-container {
+                min-height: 85vh;
+            }
+        }
+
+        canvas {
+            border-radius: 15px;
+            max-width: 100%;
+            height: auto;
+            touch-action: none;
+        }
+
+        .rotation-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            pointer-events: none;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            max-height: none;
+            overflow-y: visible;
+        }
+
+        @media (min-width: 1024px) {
+            .info-box {
+                max-height: 85vh;
+                overflow-y: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        .info-box h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+        }
+
+        .element-name {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .element-symbol {
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+            padding: 25px;
+            background: white;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        .mass-number-display {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-size: 0.35em;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .atomic-number-display {
+            position: absolute;
+            bottom: 15px;
+            left: 20px;
+            font-size: 0.35em;
+            color: #666;
+            font-weight: normal;
+        }
+
+        .info-item {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            font-size: 1.05em;
+        }
+
+        .info-item strong {
+            color: #667eea;
+        }
+
+        .description {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 12px;
+            line-height: 1.7;
+            font-size: 1em;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .isotope-info {
+            background: #e3f2fd;
+            border-left: 5px solid #2196f3;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .stability-stable {
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .stability-unstable {
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        .stability-radioactive {
+            background: #fff3cd;
+            border-left: 5px solid #ff6b00;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h2>⚛️ Atom-Baukasten</h2>
+            
+            <div class="control-group">
+                <label class="proton-label">🔴 Protonen</label>
+                <div class="particle-control">
+                    <button class="particle-btn btn-minus" onclick="changeParticle('protons', -1)">−</button>
+                    <div class="particle-count" id="proton-count">0</div>
+                    <button class="particle-btn btn-plus" onclick="changeParticle('protons', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="neutron-label">⚪ Neutronen</label>
+                <div class="particle-control">
+                    <button class="particle-btn btn-minus" onclick="changeParticle('neutrons', -1)">−</button>
+                    <div class="particle-count" id="neutron-count">0</div>
+                    <button class="particle-btn btn-plus" onclick="changeParticle('neutrons', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label class="electron-label">🔵 Elektronen</label>
+                <div class="particle-control">
+                    <button class="particle-btn btn-minus" onclick="changeParticle('electrons', -1)">−</button>
+                    <div class="particle-count" id="electron-count">0</div>
+                    <button class="particle-btn btn-plus" onclick="changeParticle('electrons', 1)">+</button>
+                </div>
+            </div>
+
+            <div class="view-toggle">
+                <button class="toggle-btn active" onclick="switchView('2d')">2D Modell</button>
+                <button class="toggle-btn" onclick="switchView('3d')">3D Orbital</button>
+            </div>
+
+            <button class="reset-btn" onclick="resetAtom()">🔄 Zurücksetzen</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="atomCanvas" width="800" height="800"></canvas>
+            <div class="rotation-hint" id="rotation-hint" style="display: none;">
+                👆 Wischen zum Drehen
+            </div>
+        </div>
+
+        <div class="info-box">
+            <h2>📊 Element-Info</h2>
+            <div id="element-info">
+                <div class="element-name" id="element-name">Kein Element</div>
+                <div class="element-symbol">
+                    <span class="mass-number-display" id="mass-display"></span>
+                    <span id="element-symbol">?</span>
+                    <span class="atomic-number-display" id="atomic-display"></span>
+                </div>
+                <div class="info-item">
+                    <strong>Ordnungszahl:</strong> <span id="atomic-number">0</span>
+                </div>
+                <div class="info-item">
+                    <strong>Massenzahl:</strong> <span id="mass-number">0</span>
+                </div>
+                <div class="info-item">
+                    <strong>Isotop:</strong> <span id="isotope-name">-</span>
+                </div>
+                <div class="info-item">
+                    <strong>Ladung:</strong> <span id="charge">neutral</span>
+                </div>
+                <div class="description" id="description">
+                    Baue ein Atom, indem du Protonen, Neutronen und Elektronen hinzufügst!
+                </div>
+                <div id="stability-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let atom = {
+            protons: 0,
+            neutrons: 0,
+            electrons: 0
+        };
+
+        let currentView = '2d';
+        let rotationAngle = 0;
+        let rotation3D = { x: 0.5, y: 0.5 };
+        let isDragging = false;
+        let lastTouchPos = { x: 0, y: 0 };
+        // Isotopen-Daten mit Stabilitätsinformationen
+        const isotopeData = {
+            1: { // Wasserstoff
+                stable: [1, 2],
+                isotopes: {
+                    0: { name: 'Wasserstoff-1 (¹H)', symbol: 'Protium', info: 'Dieses Wasserstoff-Atom hat keine Neutronen! Das ist sehr ungewöhnlich, aber bei Wasserstoff normal. Fast aller Wasserstoff auf der Erde (99,98%) ist Protium. Völlig stabil.' },
+                    1: { name: 'Wasserstoff-2 (²H)', symbol: 'Deuterium', info: 'Schwerer Wasserstoff mit einem Neutron. Wird in der Kernfusion und für "schweres Wasser" (D₂O) verwendet. Etwa 0,015% des natürlichen Wasserstoffs. Völlig stabil und ungefährlich.' },
+                    2: { name: 'Wasserstoff-3 (³H)', symbol: 'Tritium', info: '⚠️ RADIOAKTIV! Überschwerer Wasserstoff mit zwei Neutronen. Halbwertszeit: 12,3 Jahre. Wird in Leuchtfarben (Exit-Schilder) und für Kernfusion verwendet. Kommt in der Natur kaum vor.' }
+                }
+            },
+            2: { // Helium
+                stable: [1, 2],
+                isotopes: {
+                    1: { name: 'Helium-3 (³He)', symbol: '³He', info: 'Seltenes, stabiles Helium-Isotop mit nur einem Neutron. Nur 0,0001% des natürlichen Heliums. Wird für Tieftemperatur-Forschung und Neutronendetektoren verwendet. Völlig stabil.' },
+                    2: { name: 'Helium-4 (⁴He)', symbol: '⁴He', info: 'Das häufigste Helium-Isotop (99,9999%). Entsteht bei der Kernfusion in Sternen und beim radioaktiven Zerfall (Alpha-Teilchen). Völlig stabil. Das ist das Helium in Luftballons!' }
+                }
+            },
+            6: { // Kohlenstoff
+                stable: [6, 7],
+                isotopes: {
+                    6: { name: 'Kohlenstoff-12 (¹²C)', symbol: '¹²C', info: 'Das häufigste Kohlenstoff-Isotop (98,9%). Dient als Referenz für die Atommasse (genau 12 u). Völlig stabil. Alle Lebewesen bestehen hauptsächlich aus ¹²C.' },
+                    7: { name: 'Kohlenstoff-13 (¹³C)', symbol: '¹³C', info: 'Stabiles Isotop mit einem extra Neutron (1,1% des natürlichen Kohlenstoffs). Wird in der NMR-Spektroskopie und Medizin verwendet. Völlig stabil.' },
+                    8: { name: 'Kohlenstoff-14 (¹⁴C)', symbol: '¹⁴C', info: '⚠️ RADIOAKTIV! Halbwertszeit: 5.730 Jahre. Wird für die Altersbestimmung (Radiokarbonmethode) von archäologischen Funden verwendet. Entsteht in der Atmosphäre durch kosmische Strahlung.' }
+                }
+            },
+            7: { // Stickstoff
+                stable: [7, 8],
+                isotopes: {
+                    7: { name: 'Stickstoff-14 (¹⁴N)', symbol: '¹⁴N', info: 'Das häufigste Stickstoff-Isotop (99,6%). Macht den größten Teil der Luft aus. Völlig stabil.' },
+                    8: { name: 'Stickstoff-15 (¹⁵N)', symbol: '¹⁵N', info: 'Seltenes, stabiles Isotop (0,4%). Wird in der Forschung als Tracer verwendet. Völlig stabil.' }
+                }
+            },
+            8: { // Sauerstoff
+                stable: [8, 9, 10],
+                isotopes: {
+                    8: { name: 'Sauerstoff-16 (¹⁶O)', symbol: '¹⁶O', info: 'Das häufigste Sauerstoff-Isotop (99,76%). Das ist der Sauerstoff, den wir atmen! Völlig stabil.' },
+                    9: { name: 'Sauerstoff-17 (¹⁷O)', symbol: '¹⁷O', info: 'Seltenes, stabiles Isotop (0,04%). Wird in der medizinischen Bildgebung (MRT) verwendet. Völlig stabil.' },
+                    10: { name: 'Sauerstoff-18 (¹⁸O)', symbol: '¹⁸O', info: 'Stabiles Isotop (0,20%). Wichtig für Klimaforschung und Paläontologie (Temperaturbestimmung aus Eisbohrkernen). Völlig stabil.' }
+                }
+            },
+            26: { // Eisen
+                stable: [28, 30, 31, 32],
+                isotopes: {
+                    28: { name: 'Eisen-54 (⁵⁴Fe)', symbol: '⁵⁴Fe', info: 'Seltenes, stabiles Isotop (5,8%). Entsteht bei Supernova-Explosionen. Völlig stabil.' },
+                    30: { name: 'Eisen-56 (⁵⁶Fe)', symbol: '⁵⁶Fe', info: 'Das häufigste Eisen-Isotop (91,8%). Hat die höchste Bindungsenergie pro Nukleon aller Atome - das stabilste Isotop im ganzen Universum! Deshalb endet die Fusion in Sternen bei Eisen.' },
+                    31: { name: 'Eisen-57 (⁵⁷Fe)', symbol: '⁵⁷Fe', info: 'Stabiles Isotop (2,1%). Wird für Mössbauer-Spektroskopie verwendet. Völlig stabil.' },
+                    32: { name: 'Eisen-58 (⁵⁸Fe)', symbol: '⁵⁸Fe', info: 'Seltenes, stabiles Isotop (0,3%). Völlig stabil.' }
+                }
+            }
+        };
+
+        // Periodensystem-Daten
+        const elements = {
+            0: { name: 'Kein Element', symbol: '?', description: 'Baue ein Atom, indem du Protonen, Neutronen und Elektronen hinzufügst!' },
+            1: { name: 'Wasserstoff', symbol: 'H', description: 'Wasserstoff ist das leichteste und häufigste Element im Universum. Es ist ein farbloses Gas. Zwei Wasserstoffatome verbinden sich mit einem Sauerstoffatom zu Wasser (H₂O). Die Sonne besteht hauptsächlich aus Wasserstoff.' },
+            2: { name: 'Helium', symbol: 'He', description: 'Helium ist ein sehr leichtes Edelgas. Es wird für Luftballons verwendet, weil es leichter als Luft ist. Helium ist ungefährlich und reagiert mit keinem anderen Stoff. Es entsteht in der Sonne durch Kernfusion.' },
+            3: { name: 'Lithium', symbol: 'Li', description: 'Lithium ist ein weiches, silbernes Metall. Es ist das leichteste Metall und wird in Batterien für Handys, Laptops und Elektroautos verwendet. Lithium reagiert heftig mit Wasser.' },
+            4: { name: 'Beryllium', symbol: 'Be', description: 'Beryllium ist ein hartes, leichtes Metall. Es wird in der Raumfahrt und für Röntgengeräte verwendet, ist aber giftig und muss vorsichtig behandelt werden.' },
+            5: { name: 'Bor', symbol: 'B', description: 'Bor ist ein Halbmetall. Es wird in Waschmitteln und als Dünger verwendet. Bor ist wichtig für das Wachstum von Pflanzen. Borverbindungen sind sehr hart.' },
+            6: { name: 'Kohlenstoff', symbol: 'C', description: 'Kohlenstoff ist die Grundlage allen Lebens! Als Diamant ist er der härteste natürliche Stoff, als Graphit wird er in Bleistiften verwendet. Dein Körper besteht zu 18% aus Kohlenstoff. Alle organischen Stoffe enthalten Kohlenstoff.' },
+            7: { name: 'Stickstoff', symbol: 'N', description: 'Stickstoff macht 78% unserer Atemluft aus. Er ist ein farbloses Gas und wichtig für Pflanzen. Ohne Stickstoff könnten Pflanzen nicht wachsen. Stickstoff wird auch für Dünger und Sprengstoff verwendet.' },
+            8: { name: 'Sauerstoff', symbol: 'O', description: 'Sauerstoff brauchen wir zum Atmen! Er macht 21% der Luft aus. Ohne Sauerstoff können Menschen und Tiere nicht leben. Feuer braucht auch Sauerstoff zum Brennen. Wasser besteht aus Sauerstoff und Wasserstoff.' },
+            9: { name: 'Fluor', symbol: 'F', description: 'Fluor ist ein sehr reaktives, giftiges Gas. In kleinen Mengen wird es in Zahnpasta verwendet, um die Zähne zu schützen. Fluor ist das reaktivste aller Elemente.' },
+            10: { name: 'Neon', symbol: 'Ne', description: 'Neon ist ein Edelgas, das in bunten Leuchtreklamen verwendet wird. Es leuchtet rot-orange, wenn Strom durchfließt. Neon reagiert mit keinem anderen Element.' },
+            11: { name: 'Natrium', symbol: 'Na', description: 'Natrium ist ein weiches Metall, das heftig mit Wasser reagiert. Zusammen mit Chlor bildet es Kochsalz (NaCl), das wir zum Würzen verwenden. Dein Körper braucht Natrium für die Nerven.' },
+            12: { name: 'Magnesium', symbol: 'Mg', description: 'Magnesium ist ein leichtes, silbernes Metall. Es brennt mit sehr hellem Licht und wird in Feuerwerkskörpern verwendet. Dein Körper braucht Magnesium für gesunde Muskeln und Knochen.' },
+            13: { name: 'Aluminium', symbol: 'Al', description: 'Aluminium ist ein leichtes, silbernes Metall. Es wird für Getränkedosen, Alufolie und Flugzeuge verwendet, weil es leicht und stabil ist. Aluminium rostet nicht.' },
+            14: { name: 'Silicium', symbol: 'Si', description: 'Silicium ist ein Halbmetall und der wichtigste Bestandteil von Sand und Glas. Es wird auch in Computerchips verwendet. Silicium ist das zweithäufigste Element der Erdkruste.' },
+            15: { name: 'Phosphor', symbol: 'P', description: 'Phosphor leuchtet im Dunkeln (daher der Name: "Lichtträger"). Er ist wichtig für deine Knochen und Zähne. Streichhölzer enthalten auch Phosphor. Alle Lebewesen brauchen Phosphor.' },
+            16: { name: 'Schwefel', symbol: 'S', description: 'Schwefel ist ein gelbes Element, das nach faulen Eiern riecht. Es wird in Streichhölzern und Feuerwerkskörpern verwendet. Schwefel ist wichtig für Proteine in deinem Körper.' },
+            17: { name: 'Chlor', symbol: 'Cl', description: 'Chlor ist ein giftiges, grünliches Gas. In kleinen Mengen wird es verwendet, um Schwimmbadwasser sauber zu halten. Mit Natrium bildet es Kochsalz. Chlor tötet Bakterien ab.' },
+            18: { name: 'Argon', symbol: 'Ar', description: 'Argon ist ein Edelgas und macht 1% unserer Luft aus. Es wird in Glühbirnen verwendet, weil es nicht reagiert. Argon schützt Metalle beim Schweißen vor Oxidation.' },
+            19: { name: 'Kalium', symbol: 'K', description: 'Kalium ist ein weiches Metall, das heftig mit Wasser reagiert. Es ist wichtig für deine Nerven und Muskeln. Bananen enthalten viel Kalium. Kaliumsalze werden als Dünger verwendet.' },
+            20: { name: 'Calcium', symbol: 'Ca', description: 'Calcium ist ein silbernes Metall. Es ist der wichtigste Baustein für deine Knochen und Zähne. Milch enthält viel Calcium. Kalkstein und Marmor bestehen aus Calciumverbindungen.' },
+            21: { name: 'Scandium', symbol: 'Sc', description: 'Scandium ist ein seltenes, silbriges Metall. Es wird für leichte, stabile Legierungen in Flugzeugen und Fahrrädern verwendet. Scandium ist sehr teuer.' },
+            22: { name: 'Titan', symbol: 'Ti', description: 'Titan ist ein sehr starkes und leichtes Metall. Es rostet nicht und wird für Flugzeuge, Raketen und künstliche Gelenke verwendet. Titan ist so stark wie Stahl, aber viel leichter.' },
+            23: { name: 'Vanadium', symbol: 'V', description: 'Vanadium ist ein hartes Metall, das Stahl besonders fest macht. Es wird für Werkzeuge und Federn verwendet. Einige Lebewesen brauchen winzige Mengen Vanadium.' },
+            24: { name: 'Chrom', symbol: 'Cr', description: 'Chrom ist ein glänzendes Metall, das nicht rostet. Es wird verwendet, um andere Metalle zu verchromen
+            24: { name: 'Chrom', symbol: 'Cr', description: 'Chrom ist ein glänzendes Metall, das nicht rostet. Es wird verwendet, um andere Metalle zu verchromen (z.B. Wasserhähne). Edelstahl enthält Chrom. Chrom macht Rubine rot.' },
+            25: { name: 'Mangan', symbol: 'Mn', description: 'Mangan ist ein hartes, sprödes Metall. Es wird verwendet, um Stahl härter zu machen. Batterien enthalten auch Mangan. Dein Körper braucht kleine Mengen Mangan.' },
+            26: { name: 'Eisen', symbol: 'Fe', description: 'Eisen ist das wichtigste Metall der Menschheit! Es wird für Stahl, Autos, Gebäude und Werkzeuge verwendet. Dein Blut enthält Eisen, das Sauerstoff transportiert. Eisen rostet an der Luft.' },
+            27: { name: 'Cobalt', symbol: 'Co', description: 'Cobalt ist ein hartes, magnetisches Metall. Es wird für starke Magnete und blaue Farben verwendet. Cobalt ist wichtig für Vitamin B12 in deinem Körper.' },
+            28: { name: 'Nickel', symbol: 'Ni', description: 'Nickel ist ein silbriges Metall, das nicht rostet. Es wird für Münzen, Edelstahl und Batterien verwendet. Manche Menschen sind allergisch gegen Nickel in Schmuck.' },
+            29: { name: 'Kupfer', symbol: 'Cu', description: 'Kupfer ist ein rötliches Metall, das Strom sehr gut leitet. Es wird für Kabel, Rohre und Münzen verwendet. Die Freiheitsstatue ist aus Kupfer und wurde grün durch Oxidation.' },
+            30: { name: 'Zink', symbol: 'Zn', description: 'Zink ist ein bläulich-weißes Metall. Es schützt Eisen vor Rost (verzinken). Zink ist wichtig für dein Immunsystem. Batterien enthalten oft Zink.' },
+            31: { name: 'Gallium', symbol: 'Ga', description: 'Gallium ist ein weiches Metall, das in deiner Hand schmilzt (Schmelzpunkt 30°C)! Es wird in LEDs und Computerchips verwendet. Gallium ist ungiftig.' },
+            32: { name: 'Germanium', symbol: 'Ge', description: 'Germanium ist ein Halbmetall, das in den ersten Transistoren verwendet wurde. Heute wird es für Glasfaserkabel und Solarzellen genutzt. Germanium ist selten.' },
+            33: { name: 'Arsen', symbol: 'As', description: 'Arsen ist ein giftiges Halbmetall. In kleinen Mengen wird es in der Elektronik verwendet. Früher wurde Arsen als Gift verwendet. Heute wird es streng kontrolliert.' },
+            34: { name: 'Selen', symbol: 'Se', description: 'Selen ist ein Halbmetall, das in kleinen Mengen wichtig für deinen Körper ist. Es wird in Fotokopierern und Solarzellen verwendet. Zu viel Selen ist giftig.' },
+            35: { name: 'Brom', symbol: 'Br', description: 'Brom ist eine rot-braune, stinkende Flüssigkeit (eines von nur zwei flüssigen Elementen). Es ist giftig und wird für Flammschutzmittel verwendet. Brom verdampft leicht.' },
+            36: { name: 'Krypton', symbol: 'Kr', description: 'Krypton ist ein Edelgas, das in speziellen Glühbirnen verwendet wird. Es leuchtet grünlich-weiß. Krypton ist selten und teuer. Superman kommt vom Planeten Krypton!' },
+            37: { name: 'Rubidium', symbol: 'Rb', description: 'Rubidium ist ein weiches, silbriges Metall, das noch heftiger mit Wasser reagiert als Kalium. Es wird in Atomuhren verwendet. Rubidium entzündet sich an der Luft.' },
+            38: { name: 'Strontium', symbol: 'Sr', description: 'Strontium ist ein weiches Metall, das rote Flammen erzeugt. Es wird für rote Farben in Feuerwerkskörpern verwendet. Strontium ist dem Calcium ähnlich.' },
+            39: { name: 'Yttrium', symbol: 'Y', description: 'Yttrium ist ein silbriges Metall, das in LEDs und Supraleitern verwendet wird. Es ist nach dem schwedischen Dorf Ytterby benannt, wo es entdeckt wurde.' },
+            40: { name: 'Zirconium', symbol: 'Zr', description: 'Zirconium ist ein sehr hartes, korrosionsbeständiges Metall. Es wird in Kernreaktoren und für künstliche Diamanten (Zirkonia) verwendet. Zirconium ist sehr hitzebeständig.' },
+            41: { name: 'Niob', symbol: 'Nb', description: 'Niob ist ein glänzendes Metall, das sehr hitzebeständig ist. Es wird für Raketen, Pipelines und Schmuck verwendet. Niob macht Stahl besonders stark.' },
+            42: { name: 'Molybdän', symbol: 'Mo', description: 'Molybdän ist ein sehr hartes Metall mit hohem Schmelzpunkt. Es wird für Stahllegierungen und Katalysatoren verwendet. Dein Körper braucht winzige Mengen Molybdän.' },
+            43: { name: 'Technetium', symbol: 'Tc', description: 'Technetium ist das leichteste radioaktive Element. Es kommt in der Natur nicht vor, sondern wird künstlich hergestellt. Es wird in der Medizin für Untersuchungen verwendet.' },
+            44: { name: 'Ruthenium', symbol: 'Ru', description: 'Ruthenium ist ein hartes, seltenes Metall. Es wird für Festplatten und als Katalysator verwendet. Ruthenium macht Legierungen sehr hart und korrosionsbeständig.' },
+            45: { name: 'Rhodium', symbol: 'Rh', description: 'Rhodium ist eines der seltensten und teuersten Metalle. Es wird für Katalysatoren in Autos und zum Veredeln von Schmuck verwendet. Rhodium ist sehr glänzend.' },
+            46: { name: 'Palladium', symbol: 'Pd', description: 'Palladium ist ein silbriges Metall, das Wasserstoff wie ein Schwamm aufsaugen kann. Es wird für Katalysatoren und Schmuck verwendet. Palladium ist sehr wertvoll.' },
+            47: { name: 'Silber', symbol: 'Ag', description: 'Silber ist das beste Metall für die Leitung von Strom und Wärme. Es wird für Schmuck, Münzen und Spiegel verwendet. Silber tötet Bakterien ab und läuft an der Luft schwarz an.' },
+            48: { name: 'Cadmium', symbol: 'Cd', description: 'Cadmium ist ein weiches, giftiges Metall. Es wurde früher für Batterien verwendet, ist aber heute verboten. Cadmium wird noch für bestimmte Legierungen genutzt.' },
+            49: { name: 'Indium', symbol: 'In', description: 'Indium ist ein weiches, silbriges Metall. Es wird für Touchscreens und LCD-Bildschirme verwendet. Indium ist selten und wertvoll. Es klebt an Glas.' },
+            50: { name: 'Zinn', symbol: 'Sn', description: 'Zinn ist ein weiches Metall, das nicht rostet. Es wird zum Verzinnen von Konservendosen und für Lötzinn verwendet. Bronze ist eine Legierung aus Kupfer und Zinn.' },
+            51: { name: 'Antimon', symbol: 'Sb', description: 'Antimon ist ein sprödes Halbmetall mit bläulichem Glanz. Es wird für Flammschutzmittel und Batterien verwendet. Schon im Altertum wurde Antimon für Kosmetik genutzt.' },
+            52: { name: 'Tellur', symbol: 'Te', description: 'Tellur ist ein seltenes Halbmetall mit metallischem Glanz. Es wird für Solarzellen und DVDs verwendet. Tellur riecht nach Knoblauch, wenn es erhitzt wird.' },
+            53: { name: 'Iod', symbol: 'I', description: 'Iod ist ein grau-schwarzer Feststoff, der lila Dämpfe bildet. Es wird zur Desinfektion von Wunden verwendet. Deine Schilddrüse braucht Iod. Iodsalz enthält kleine Mengen Iod.' },
+            54: { name: 'Xenon', symbol: 'Xe', description: 'Xenon ist ein schweres Edelgas, das in hellen Autoscheinwerfern verwendet wird. Es wird auch für Narkosen und Ionenantriebe in Raumsonden genutzt. Xenon ist sehr selten.' }
+        };
+
+        // Canvas Setup
+        const canvas = document.getElementById('atomCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth - 40, container.clientHeight - 40, 800);
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Touch Events
+        canvas.addEventListener('touchstart', (e) => {
+            if (currentView === '3d') {
+                e.preventDefault();
+                isDragging = true;
+                const touch = e.touches[0];
+                lastTouchPos = { x: touch.clientX, y: touch.clientY };
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (isDragging && currentView === '3d') {
+                e.preventDefault();
+                const touch = e.touches[0];
+                const dx = touch.clientX - lastTouchPos.x;
+                const dy = touch.clientY - lastTouchPos.y;
+                
+                rotation3D.y += dx * 0.015;
+                rotation3D.x += dy * 0.015;
+                
+                rotation3D.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation3D.x));
+                
+                lastTouchPos = { x: touch.clientX, y: touch.clientY };
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (currentView === '3d') {
+                isDragging = true;
+                lastTouchPos = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging && currentView === '3d') {
+                const dx = e.clientX - lastTouchPos.x;
+                const dy = e.clientY - lastTouchPos.y;
+                
+                rotation3D.y += dx * 0.01;
+                rotation3D.x += dy * 0.01;
+                
+                rotation3D.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, rotation3D.x));
+                
+                lastTouchPos = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        function changeParticle(type, change) {
+            atom[type] = Math.max(0, atom[type] + change);
+            if (type === 'protons' && atom[type] > 54) atom[type] = 54;
+            if (type === 'neutrons' && atom[type] > 100) atom[type] = 100;
+            if (type === 'electrons' && atom[type] > 54) atom[type] = 54;
+            
+            updateDisplay();
+        }
+
+        function resetAtom() {
+            atom = { protons: 0, neutrons: 0, electrons: 0 };
+            rotation3D = { x: 0.5, y: 0.5 };
+            updateDisplay();
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            document.getElementById('rotation-hint').style.display = view === '3d' ? 'block' : 'none';
+            
+            draw();
+        }
+
+        function updateDisplay() {
+            document.getElementById('proton-count').textContent = atom.protons;
+            document.getElementById('neutron-count').textContent = atom.neutrons;
+            document.getElementById('electron-count').textContent = atom.electrons;
+            
+            updateElementInfo();
+            draw();
+        }
+
+        function getIsotopeStability(protons, neutrons) {
+            if (protons === 0) return { stable: null, type: 'none' };
+            
+            const elementData = isotopeData[protons];
+            
+            // Spezifische Isotopen-Daten vorhanden
+            if (elementData && elementData.isotopes && elementData.isotopes[neutrons]) {
+                const isStable = elementData.stable.includes(neutrons);
+                return {
+                    stable: isStable,
+                    type: isStable ? 'known_stable' : 'known_radioactive',
+                    info: elementData.isotopes[neutrons]
+                };
+            }
+            
+            // Allgemeine Stabilitätsregeln
+            const ratio = neutrons / protons;
+            
+            // Zu wenige Neutronen
+            if (neutrons === 0 && protons > 1) {
+                return { 
+                    stable: false, 
+                    type: 'no_neutrons',
+                    reason: 'Atome mit mehr als einem Proton brauchen Neutronen für die Stabilität!'
+                };
+            }
+            
+            // Leichte Elemente (Z < 20): N/Z ≈ 1
+            if (protons < 20) {
+                if (Math.abs(ratio - 1) < 0.2) {
+                    return { 
+                        stable: true, 
+                        type: 'likely_stable',
+                        reason: `Gutes Verhältnis von Protonen zu Neutronen (${protons}:${neutrons})`
+                    };
+                } else if (ratio < 0.8) {
+                    return { 
+                        stable: false, 
+                        type: 'too_few_neutrons',
+                        reason: `Zu wenige Neutronen! Bei ${protons} Protonen werden etwa ${Math.round(protons * 1)} Neutronen benötigt.`
+                    };
+                } else if (ratio > 1.3) {
+                    return { 
+                        stable: false, 
+                        type: 'too_many_neutrons',
+                        reason: `Zu viele Neutronen! Bei ${protons} Protonen werden etwa ${Math.round(protons * 1)} Neutronen benötigt.`
+                    };
+                } else {
+                    return { 
+                        stable: false, 
+                        type: 'unstable',
+                        reason: 'Ungünstiges Verhältnis von Protonen zu Neutronen.'
+                    };
+                }
+            }
+            
+            // Mittelschwere Elemente (20 ≤ Z < 40): N/Z ≈ 1.25
+            if (protons < 40) {
+                if (Math.abs(ratio - 1.25) < 0.2) {
+                    return { 
+                        stable: true, 
+                        type: 'likely_stable',
+                        reason: `Gutes Verhältnis von Protonen zu Neutronen (${protons}:${neutrons})`
+                    };
+                } else if (ratio < 1.0) {
+                    return { 
+                        stable: false, 
+                        type: 'too_few_neutrons',
+                        reason: `Zu wenige Neutronen! Bei ${protons} Protonen werden etwa ${Math.round(protons * 1.25)} Neutronen benötigt.`
+                    };
+                } else if (ratio > 1.5) {
+                    return { 
+                        stable: false, 
+                        type: 'too_many_neutrons',
+                        reason: `Zu viele Neutronen! Bei ${protons} Protonen werden etwa ${Math.round(protons * 1.25)} Neutronen benötigt.`
+                    };
+                } else {
+                    return { 
+                        stable: false, 
+                        type: 'unstable',
+                        reason: 'Ungünstiges Verhältnis von Protonen zu Neutronen.'
+                    };
+                }
+            }
+            
+            // Schwere Elemente (Z ≥ 40): N/Z ≈ 1.5
+            if (Math.abs(ratio - 1.5) < 0.2) {
+                return { 
+                    stable: true, 
+                    type: 'likely_stable',
+                    reason: `Gutes Verhältnis von Protonen zu Neutronen (${protons}:${neutrons})`
+                };
+            } else if (ratio < 1.3) {
+                return { 
+                    stable: false, 
+                    type: 'too_few_neutrons',
+                    reason: `Zu wenige Neutronen! Bei ${protons} Protonen werden etwa ${Math.round(protons * 1.5)} Neutronen benötigt.`
+                };
+            } else if (ratio > 1.7) {
+                return { 
+                    stable: false, 
+                    type: 'too_many_neutrons',
+                    reason: `Zu viele Neutronen! Bei ${protons} Protonen werden etwa ${Math.round(protons * 1.5)} Neutronen benötigt.`
+                };
+            } else {
+                return { 
+                    stable: false, 
+                    type: 'unstable',
+                    reason: 'Ungünstiges Verhältnis von Protonen zu Neutronen.'
+                };
+            }
+        }
+
+        function updateElementInfo() {
+            const element = elements[atom.protons] || elements[0];
+            const charge = atom.protons - atom.electrons;
+            const massNumber = atom.protons + atom.neutrons;
+            
+            document.getElementById('element-name').textContent = element.name;
+            document.getElementById('element-symbol').textContent = element.symbol;
+            document.getElementById('atomic-number').textContent = atom.protons;
+            document.getElementById('mass-number').textContent = massNumber;
+            
+            // Massen- und Ordnungszahl in Symboldarstellung
+            if (massNumber > 0) {
+                document.getElementById('mass-display').textContent = massNumber;
+            } else {
+                document.getElementById('mass-display').textContent = '';
+            }
+            
+            if (atom.protons > 0) {
+                document.getElementById('atomic-display').textContent = atom.protons;
+            } else {
+                document.getElementById('atomic-display').textContent = '';
+            }
+            
+            // Isotopen-Name und Stabilität
+            const stability = getIsotopeStability(atom.protons, atom.neutrons);
+            let isotopeName = '-';
+            
+            if (atom.protons > 0) {
+                if (stability.info && stability.info.symbol) {
+                    isotopeName = stability.info.symbol;
+                } else if (massNumber > 0) {
+                    isotopeName = `${element.symbol}-${massNumber}`;
+                }
+            }
+            
+            document.getElementById('isotope-name').textContent = isotopeName;
+            
+            // Ladung
+            let chargeText = 'neutral';
+            if (charge > 0) chargeText = `+${charge} (Kation)`;
+            if (charge < 0) chargeText = `${charge} (Anion)`;
+            document.getElementById('charge').textContent = chargeText;
+            
+            // Beschreibung
+            document.getElementById('description').textContent = element.description;
+            
+            // Stabilitäts-Container leeren
+            const stabilityContainer = document.getElementById('stability-container');
+            stabilityContainer.innerHTML = '';
+            
+            // Ladungs-Warnung
+            if (charge !== 0 && atom.protons > 0) {
+                const warning = document.createElement('div');
+                warning.className = 'warning';
+                warning.innerHTML = `⚠️ <strong>Ion-Warnung:</strong><br>Dieses Atom ist ein Ion! Es hat ${Math.abs(charge)} ${charge > 0 ? 'Elektronen zu wenig' : 'Elektronen zu viel'} und ist daher ${charge > 0 ? 'positiv' : 'negativ'} geladen.`;
+                stabilityContainer.appendChild(warning);
+            }
+            
+            // Stabilitäts-Information
+            if (atom.protons > 0) {
+                let stabilityBox = document.createElement('div');
+                
+                if (stability.type === 'known_stable') {
+                    stabilityBox.className = 'stability-stable';
+                    stabilityBox.innerHTML = `✅ <strong>Stabiles Isotop</strong><br>${stability.info.info}`;
+                } else if (stability.type === 'known_radioactive') {
+                    stabilityBox.className = 'stability-radioactive';
+                    stabilityBox.innerHTML = `☢️ <strong>Radioaktives Isotop</strong><br>${stability.info.info}`;
+                } else if (stability.type === 'no_neutrons') {
+                    stabilityBox.className = 'stability-unstable';
+                    stabilityBox.innerHTML = `❌ <strong>Unmögliches Atom!</strong><br>${stability.reason}`;
+                } else if (stability.type === 'too_few_neutrons') {
+                    stabilityBox.className = 'stability-unstable';
+                    stabilityBox.innerHTML = `⚠️ <strong>Zu wenige Neutronen</strong><br>${stability.reason}<br><br>💡 <em>Tipp: Füge mehr Neutronen hinzu!</em>`;
+                } else if (stability.type === 'too_many_neutrons') {
+                    stabilityBox.className = 'stability-unstable';
+                    stabilityBox.innerHTML = `⚠️ <strong>Zu viele Neutronen</strong><br>${stability.reason}<br><br>💡 <em>Tipp: Entferne einige Neutronen!</em>`;
+                } else if (stability.type === 'likely_stable') {
+                    stabilityBox.className = 'stability-stable';
+                    stabilityBox.innerHTML = `✅ <strong>Wahrscheinlich stabiles Isotop</strong><br>${stability.reason}<br><br>Dieses Isotop liegt im stabilen Bereich und zerfällt vermutlich nicht.`;
+                } else if (stability.type === 'unstable') {
+                    stabilityBox.className = 'stability-unstable';
+                    stabilityBox.innerHTML = `⚠️ <strong>Instabiles Isotop</strong><br>${stability.reason}<br><br>Das Isotop ist wahrscheinlich radioaktiv und zerfällt mit der Zeit.`;
+                }
+                
+                if (stabilityBox.innerHTML) {
+                    stabilityContainer.appendChild(stabilityBox);
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (currentView === '2d') {
+                draw2D();
+            } else {
+                draw3D();
+            }
+        }
+
+        function draw2D() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const shells = getElectronShells();
+            const shellRadii = [80, 140, 200, 260, 320, 380];
+            
+            shells.forEach((electronCount, shellIndex) => {
+                if (electronCount > 0) {
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, shellRadii[shellIndex], 0, Math.PI * 2);
+                    ctx.strokeStyle = '#3498db';
+                    ctx.lineWidth = 3;
+                    ctx.setLineDash([8, 8]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    
+                    for (let i = 0; i < electronCount; i++) {
+                        const angle = (i / electronCount) * Math.PI * 2 + rotationAngle;
+                        const x = centerX + Math.cos(angle) * shellRadii[shellIndex];
+                        const y = centerY + Math.sin(angle) * shellRadii[shellIndex];
+                        
+                        ctx.beginPath();
+                        ctx.arc(x, y, 9, 0, Math.PI * 2);
+                        ctx.fillStyle = '#3498db';
+                        ctx.fill();
+                        ctx.strokeStyle = '#2980b9';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                        
+                        ctx.beginPath();
+                        ctx.arc(x - 3, y - 3, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+                        ctx.fill();
+                    }
+                }
+            });
+            
+            const totalNucleons = atom.protons + atom.neutrons;
+            
+            if (totalNucleons > 0) {
+                const nucleusRadius = Math.min(60, 25 + Math.sqrt(totalNucleons) * 6);
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, nucleusRadius, 0, Math.PI * 2);
+                const gradient = ctx.createRadialGradient(centerX - 12, centerY - 12, 0, centerX, centerY, nucleusRadius);
+                gradient.addColorStop(0, '#f8f8f8');
+                gradient.addColorStop(1, '#d5d5d5');
+                ctx.fillStyle = gradient;
+                ctx.fill();
+                ctx.strokeStyle = '#444';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                
+                const particles = [];
+                for (let i = 0; i < atom.protons; i++) particles.push('proton');
+                for (let i = 0; i < atom.neutrons; i++) particles.push('neutron');
+                
+                const particleRadius = 6;
+                const spacing = particleRadius * 2.3;
+                const rows = Math.ceil(Math.sqrt(totalNucleons));
+                
+                let particleIndex = 0;
+                for (let row = 0; row < rows && particleIndex < particles.length; row++) {
+                    const cols = Math.ceil(totalNucleons / rows);
+                    const offsetX = -(cols - 1) * spacing / 2;
+                    const offsetY = -(rows - 1) * spacing / 2;
+                    
+                    for (let col = 0; col < cols && particleIndex < particles.length; col++) {
+                        const x = centerX + offsetX + col * spacing + (row % 2) * spacing / 2;
+                        const y = centerY + offsetY + row * spacing * 0.866;
+                        
+                        const dist = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+                        if (dist < nucleusRadius - particleRadius) {
+                            const type = particles[particleIndex];
+                            
+                            ctx.beginPath();
+                            ctx.arc(x, y, particleRadius, 0, Math.PI * 2);
+                            
+                            if (type === 'proton') {
+                                const protonGradient = ctx.createRadialGradient(x - 2, y - 2, 0, x, y, particleRadius);
+                                protonGradient.addColorStop(0, '#ff7979');
+                                protonGradient.addColorStop(1, '#e74c3c');
+                                ctx.fillStyle = protonGradient;
+                            } else {
+                                const neutronGradient = ctx.createRadialGradient(x - 2, y - 2, 0, x, y, particleRadius);
+                                neutronGradient.addColorStop(0, '#bdc3c7');
+                                neutronGradient.addColorStop(1, '#95a5a6');
+                                ctx.fillStyle = neutronGradient;
+                            }
+                            
+                            ctx.fill();
+                            ctx.strokeStyle = type === 'proton' ? '#c0392b' : '#707070';
+                            ctx.lineWidth = 2;
+                            ctx.stroke();
+                            
+                            particleIndex++;
+                        }
+                    }
+                }
+            }
+            
+            drawLegend2D();
+        }
+
+        function draw3D() {
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            const config = getElectronConfiguration();
+            
+            const orbitals = [];
+            
+            if (config['1s'] > 0) orbitals.push({ type: 's', n: 1, electrons: config['1s'], radius: 80 });
+            if (config['2s'] > 0) orbitals.push({ type: 's', n: 2, electrons: config['2s'], radius: 140 });
+            if (config['2p'] > 0) orbitals.push({ type: 'p', n: 2, electrons: config['2p'], radius: 140 });
+            if (config['3s'] > 0) orbitals.push({ type: 's', n: 3, electrons: config['3s'], radius: 200 });
+            if (config['3p'] > 0) orbitals.push({ type: 'p', n: 3, electrons: config['3p'], radius: 200 });
+            if (config['4s'] > 0) orbitals.push({ type: 's', n: 4, electrons: config['4s'], radius: 260 });
+            if (config['3d'] > 0) orbitals.push({ type: 'd', n: 3, electrons: config['3d'], radius: 220 });
+            if (config['4p'] > 0) orbitals.push({ type: 'p', n: 4, electrons: config['4p'], radius: 260 });
+            if (config['5s'] > 0) orbitals.push({ type: 's', n: 5, electrons: config['5s'], radius: 320 });
+            if (config['4d'] > 0) orbitals.push({ type: 'd', n: 4, electrons: config['4d'], radius: 280 });
+            
+            orbitals.forEach(orbital => {
+                if (orbital.type === 's') {
+                    drawSOrbital3D(centerX, centerY, orbital.radius, orbital.electrons);
+                } else if (orbital.type === 'p') {
+                    drawPOrbitals3D(centerX, centerY, orbital.radius, orbital.electrons);
+                } else if (orbital.type === 'd') {
+                    drawDOrbitals3D(centerX, centerY, orbital.radius, orbital.electrons);
+                }
+            });
+            
+            const nucleusRadius = 35;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, nucleusRadius, 0, Math.PI * 2);
+            const gradient = ctx.createRadialGradient(centerX - 12, centerY - 12, 0, centerX, centerY, nucleusRadius);
+            gradient.addColorStop(0, '#ffe066');
+            gradient.addColorStop(0.5, '#ff9f43');
+            gradient.addColorStop(1, '#ee5a24');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.strokeStyle = '#c23616';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            if (atom.protons > 0) {
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(`${atom.protons}p⁺`, centerX, centerY - 6);
+                ctx.fillText(`${atom.neutrons}n⁰`, centerX, centerY + 8);
+            }
+            
+            drawLegend3D();
+        }
+
+        function drawSOrbital3D(x, y, radius, electrons) {
+            ctx.save();
+            
+            const scale = Math.cos(rotation3D.x) * 0.3 + 0.7;
+            const offsetY = Math.sin(rotation3D.x) * radius * 0.3;
+            
+            for (let layer = 3; layer >= 0; layer--) {
+                ctx.globalAlpha = 0.15 + layer * 0.08;
+                const layerRadius = radius * scale * (0.4 + layer * 0.2);
+                
+                const gradient = ctx.createRadialGradient(
+                    x, y + offsetY, 0,
+                    x, y + offsetY, layerRadius
+                );
+                gradient.addColorStop(0, 'rgba(52, 152, 219, 0)');
+                gradient.addColorStop(0.5, `rgba(52, 152, 219, ${0.6 - layer * 0.1})`);
+                gradient.addColorStop(1, 'rgba(52, 152, 219, 0)');
+                
+                ctx.beginPath();
+                ctx.arc(x, y + offsetY, layerRadius, 0, Math.PI * 2);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+            }
+            
+            ctx.globalAlpha = 0.5;
+            ctx.beginPath();
+            ctx.arc(x, y + offsetY, radius * scale, 0, Math.PI * 2);
+            ctx.strokeStyle = '#2980b9';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+
+        function drawPOrbitals3D(x, y, radius, electrons) {
+            const orientations = [
+                { angle: 0, axis: 'x' },
+                { angle: Math.PI / 2, axis: 'y' },
+                { angle: 0, axis: 'z' }
+            ];
+            
+            let electronIndex = 0;
+            
+            for (let i = 0; i < Math.min(3, Math.ceil(electrons / 2)); i++) {
+                const orientation = orientations[i];
+                const orbitalElectrons = Math.min(2, electrons - electronIndex);
+                
+                if (orbitalElectrons > 0) {
+                    drawDumbbellOrbital3D(x, y, radius, orientation, orbitalElectrons, electronIndex);
+                    electronIndex += orbitalElectrons;
+                }
+            }
+        }
+
+        function drawDumbbellOrbital3D(x, y, radius, orientation, electrons, offset) {
+            ctx.save();
+            
+            const cosX = Math.cos(rotation3D.x);
+            const sinX = Math.sin(rotation3D.x);
+            const cosY = Math.cos(rotation3D.y + orientation.angle);
+            const sinY = Math.sin(rotation3D.y + orientation.angle);
+            
+            [-1, 1].forEach(dir => {
+                let lobeX, lobeY, lobeZ;
+                
+                if (orientation.axis === 'x') {
+                    lobeX = dir * radius * 0.5 * cosY;
+                    lobeY = dir * radius * 0.5 * sinY * cosX;
+                    lobeZ = dir * radius * 0.5 * sinY * sinX;
+                } else if (orientation.axis === 'y') {
+                    lobeX = dir * radius * 0.5 * sinY;
+                    lobeY = dir * radius * 0.5 * cosX;
+                    lobeZ = dir * radius * 0.5 * sinX;
+                } else {
+                    lobeX = dir * radius * 0.5 * sinX * cosY;
+                    lobeY = dir * radius * 0.5 * cosX;
+                    lobeZ = dir * radius * 0.5 * sinX * sinY;
+                }
+                
+                const screenX = x + lobeX;
+                const screenY = y - lobeZ;
+                const depth = lobeY;
+                
+                const scale = 0.7 + depth / radius * 0.3;
+                const lobeRadius = radius * 0.4 * scale;
+                
+                for (let layer = 3; layer >= 0; layer--) {
+                    ctx.globalAlpha = 0.12 + layer * 0.08;
+                    const layerRadius = lobeRadius * (0.5 + layer * 0.17);
+                    
+                    const gradient = ctx.createRadialGradient(
+                        screenX, screenY, 0,
+                        screenX, screenY, layerRadius
+                    );
+                    gradient.addColorStop(0, `rgba(155, 89, 182, ${0.7 - layer * 0.1})`);
+                    gradient.addColorStop(0.7, `rgba(155, 89, 182, ${0.3 - layer * 0.05})`);
+                    gradient.addColorStop(1, 'rgba(155, 89, 182, 0)');
+                    
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, layerRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                }
+                
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, lobeRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = '#8e44ad';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            });
+            
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+
+        function drawDOrbitals3D(x, y, radius, electrons) {
+            const orientations = [0, Math.PI / 2.5, Math.PI / 1.25, Math.PI / 5, Math.PI * 4 / 5];
+            let electronIndex = 0;
+            
+            for (let i = 0; i < Math.min(5, Math.ceil(electrons / 2)); i++) {
+                const orbitalElectrons = Math.min(2, electrons - electronIndex);
+                
+                if (orbitalElectrons > 0) {
+                    drawCloverleafOrbital3D(x, y, radius, orientations[i], orbitalElectrons, electronIndex);
+                    electronIndex += orbitalElectrons;
+                }
+            }
+        }
+
+        function drawCloverleafOrbital3D(x, y, radius, baseAngle, electrons, offset) {
+            ctx.save();
+            
+            for (let lobe = 0; lobe < 4; lobe++) {
+                const angle = baseAngle + lobe * Math.PI / 2;
+                const cosA = Math.cos(angle + rotation3D.y);
+                const sinA = Math.sin(angle + rotation3D.y);
+                const cosX = Math.cos(rotation3D.x);
+                const sinX = Math.sin(rotation3D.x);
+                
+                const lobeX = radius * 0.45 * cosA;
+                const lobeY = radius * 0.45 * sinA * cosX;
+                const lobeZ = radius * 0.45 * sinA * sinX;
+                
+                const screenX = x + lobeX;
+                const screenY = y - lobeZ;
+                const depth = lobeY;
+                
+                const scale = 0.6 + depth / radius * 0.4;
+                const lobeRadius = radius * 0.28 * scale;
+                
+                for (let layer = 3; layer >= 0; layer--) {
+                    ctx.globalAlpha = 0.1 + layer * 0.08;
+                    const layerRadius = lobeRadius * (0.5 + layer * 0.17);
+                    
+                    const gradient = ctx.createRadialGradient(
+                        screenX, screenY, 0,
+                        screenX, screenY, layerRadius
+                    );
+                    gradient.addColorStop(0, `rgba(230, 126, 34, ${0.7 - layer * 0.1})`);
+                    gradient.addColorStop(1, 'rgba(230, 126, 34, 0)');
+                    
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, layerRadius, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                }
+                
+                ctx.globalAlpha = 0.6;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, lobeRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = '#d35400';
+                ctx.lineWidth = 3;
+                ctx.stroke();
+            }
+            
+            ctx.globalAlpha = 1;
+            ctx.restore();
+        }
+
+        function drawLegend2D() {
+            const x = 25;
+            const y = canvas.height - 90;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillRect(x - 12, y - 12, 200, 80);
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x - 12, y - 12, 200, 80);
+            
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 12, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#e74c3c';
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Proton (+)', x + 30, y + 17);
+            
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 42, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#95a5a6';
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.fillText('Neutron (0)', x + 30, y + 47);
+        }
+
+        function drawLegend3D() {
+            const x = 25;
+            const y = canvas.height - 125;
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.fillRect(x - 12, y - 12, 200, 115);
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x - 12, y - 12, 200, 115);
+            
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = '#333';
+            
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 12, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#3498db';
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.fillText('s-Orbital', x + 30, y + 17);
+            
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 42, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#9b59b6';
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.fillText('p-Orbital', x + 30, y + 47);
+            
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 72, 8, 0, Math.PI * 2);
+            ctx.fillStyle = '#e67e22';
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.fillText('d-Orbital', x + 30, y + 77);
+        }
+
+        function getElectronShells() {
+            const shells = [0, 0, 0, 0, 0];
+            let remaining = atom.electrons;
+            const maxPerShell = [2, 8, 18, 18, 8];
+            
+            for (let i = 0; i < shells.length && remaining > 0; i++) {
+                shells[i] = Math.min(remaining, maxPerShell[i]);
+                remaining -= shells[i];
+            }
+            
+            return shells;
+        }
+
+        function getElectronConfiguration() {
+            const config = {
+                '1s': 0, '2s': 0, '2p': 0, '3s': 0, '3p': 0,
+                '4s': 0, '3d': 0, '4p': 0, '5s': 0, '4d': 0
+            };
+            
+            const order = ['1s', '2s', '2p', '3s', '3p', '4s', '3d', '4p', '5s', '4d'];
+            const maxElectrons = { 's': 2, 'p': 6, 'd': 10 };
+            
+            let remaining = atom.electrons;
+            
+            for (const orbital of order) {
+                if (remaining <= 0) break;
+                
+                const type = orbital.slice(-1);
+                const max = maxElectrons[type];
+                
+                config[orbital] = Math.min(remaining, max);
+                remaining -= config[orbital];
+            }
+            
+            return config;
+        }
+
+        function animate() {
+            rotationAngle += 0.01;
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        updateDisplay();
+        animate();
+    </script>
+</body>
+</html>
